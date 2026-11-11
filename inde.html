@@ -1,0 +1,147 @@
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Climbing Ball</title>
+<style>
+body {
+  margin: 0;
+  background: #171923;
+  color: white;
+  text-align: center;
+  font-family: sans-serif;
+}
+canvas {
+  background: #252b3a;
+  display: block;
+  margin: 20px auto;
+  border: 2px solid white;
+}
+button {
+  padding: 12px 24px;
+  margin: 5px;
+  font-size: 18px;
+}
+</style>
+</head>
+<body>
+
+<h1>Climbing Ball</h1>
+<p>ボールを操作してゴールを目指そう！</p>
+
+<canvas id="game" width="400" height="600"></canvas>
+
+<button onclick="move(-1)">← 左</button>
+<button onclick="jump()">ジャンプ</button>
+<button onclick="move(1)">右 →</button>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let ball = {
+  x: 200,
+  y: 520,
+  r: 15,
+  vx: 0,
+  vy: 0
+};
+
+let platforms = [
+  {x: 80, y: 450, w: 120, h: 12},
+  {x: 220, y: 350, w: 120, h: 12},
+  {x: 50, y: 250, w: 120, h: 12},
+  {x: 180, y: 150, w: 120, h: 12}
+];
+
+let gravity = 0.35;
+let onGround = false;
+let gameOver = false;
+let cleared = false;
+
+function move(direction) {
+  if (!gameOver && !cleared) {
+    ball.vx = direction * 4;
+  }
+}
+
+function jump() {
+  if (onGround && !gameOver && !cleared) {
+    ball.vy = -9;
+    onGround = false;
+  }
+}
+
+function update() {
+  if (gameOver || cleared) return;
+
+  ball.vy += gravity;
+  ball.x += ball.vx;
+  ball.y += ball.vy;
+
+  ball.vx *= 0.92;
+  onGround = false;
+
+  platforms.forEach(p => {
+    if (
+      ball.vy > 0 &&
+      ball.x + ball.r > p.x &&
+      ball.x - ball.r < p.x + p.w &&
+      ball.y + ball.r >= p.y &&
+      ball.y + ball.r <= p.y + 12
+    ) {
+      ball.y = p.y - ball.r;
+      ball.vy = 0;
+      onGround = true;
+    }
+  });
+
+  if (ball.y > canvas.height) {
+    gameOver = true;
+  }
+
+  if (ball.y < 50) {
+    cleared = true;
+  }
+
+  ball.x = Math.max(ball.r, Math.min(canvas.width - ball.r, ball.x));
+}
+
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  ctx.fillStyle = "#39d98a";
+  platforms.forEach(p => {
+    ctx.fillRect(p.x, p.y, p.w, p.h);
+  });
+
+  ctx.beginPath();
+  ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2);
+  ctx.fillStyle = "#ffcc33";
+  ctx.fill();
+
+  ctx.fillStyle = "white";
+  ctx.font = "20px sans-serif";
+
+  if (gameOver) {
+    ctx.fillText("GAME OVER", 130, 300);
+  }
+
+  if (cleared) {
+    ctx.fillText("CLEAR!", 165, 300);
+  }
+}
+
+function loop() {
+  update();
+  draw();
+  requestAnimationFrame(loop);
+}
+
+loop();
+</script>
+
+</body>
+</html>
